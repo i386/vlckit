@@ -32,8 +32,8 @@
     void *_previousInput;
 }
 + (VLCExtensionsManager *)sharedManager;
-- (NSArray *)extensions;
+@property (nonatomic, readonly, copy) NSArray *extensions;
 - (void)runExtension:(VLCExtension *)extension;
 
-@property (readwrite, retain) VLCMediaPlayer *mediaPlayer;
+@property (readwrite, strong) VLCMediaPlayer *mediaPlayer;
 @end

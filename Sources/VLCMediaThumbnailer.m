@@ -29,7 +29,7 @@
 @interface VLCMediaThumbnailer ()
 {
     id<VLCMediaThumbnailerDelegate> __weak _delegate;
-    VLCMedia *_media;
+    VLCMedia *__weak _media;
     void *_mp;
     CGImageRef _thumbnail;
     void *_data;

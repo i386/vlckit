@@ -124,11 +124,14 @@ static void HandleMediaInstanceStateChanged(const libvlc_event_t * event, void *
 
 static void HandleMediaPlayerMediaChanged(const libvlc_event_t * event, void * self)
 {
+    VLCMedia *media = nil;
     @autoreleasepool {
 
+        media = [VLCMedia mediaWithLibVLCMediaDescriptor:event->u.media_player_media_changed.new_media];
+        
         [[VLCEventManager sharedManager] callOnMainThreadObject:(__bridge id)(self)
                                                      withMethod:@selector(mediaPlayerMediaChanged:)
-                                           withArgumentAsObject:[VLCMedia mediaWithLibVLCMediaDescriptor:event->u.media_player_media_changed.new_media]];
+                                           withArgumentAsObject:media];
 
     }
 }
@@ -149,7 +152,6 @@ static void HandleMediaPlayerMediaChanged(const libvlc_event_t * event, void * s
 
 @interface VLCMediaPlayer ()
 {
-    VLCLibrary *_privateLibrary;
     id _delegate;                        //< Object delegate
     void * _playerInstance;              //  Internal
     VLCMedia * _media;                   //< Current media being played
@@ -165,7 +167,6 @@ static void HandleMediaPlayerMediaChanged(const libvlc_event_t * event, void * s
 @end
 
 @implementation VLCMediaPlayer
-@synthesize libraryInstance = _privateLibrary;
 
 /* Bindings */
 + (NSSet *)keyPathsForValuesAffectingValueForKey:(NSString *)key
@@ -187,34 +188,34 @@ static void HandleMediaPlayerMediaChanged(const libvlc_event_t * event, void * s
 }
 
 /* Constructor */
-- (id)init
+- (instancetype)init
 {
     return [self initWithDrawable:nil options:nil];
 }
 
 #if !TARGET_OS_IPHONE
-- (id)initWithVideoView:(VLCVideoView *)aVideoView
+- (instancetype)initWithVideoView:(VLCVideoView *)aVideoView
 {
     return [self initWithDrawable: aVideoView options:nil];
 }
 
-- (id)initWithVideoLayer:(VLCVideoLayer *)aVideoLayer
+- (instancetype)initWithVideoLayer:(VLCVideoLayer *)aVideoLayer
 {
     return [self initWithDrawable: aVideoLayer options:nil];
 }
 
-- (id)initWithVideoView:(VLCVideoView *)aVideoView options:(NSArray *)options
+- (instancetype)initWithVideoView:(VLCVideoView *)aVideoView options:(NSArray *)options
 {
     return [self initWithDrawable: aVideoView options:options];
 }
 
-- (id)initWithVideoLayer:(VLCVideoLayer *)aVideoLayer options:(NSArray *)options
+- (instancetype)initWithVideoLayer:(VLCVideoLayer *)aVideoLayer options:(NSArray *)options
 {
     return [self initWithDrawable: aVideoLayer options:options];
 }
 #endif
 
-- (id)initWithOptions:(NSArray *)options
+- (instancetype)initWithOptions:(NSArray *)options
 {
     return [self initWithDrawable:nil options:options];
 }
@@ -241,8 +242,8 @@ static void HandleMediaPlayerMediaChanged(const libvlc_event_t * event, void * s
     }
 
     libvlc_media_player_release(_playerInstance);
-    if (_privateLibrary != [VLCLibrary sharedLibrary])
-        libvlc_release(_privateLibrary.instance);
+    if (_libraryInstance != [VLCLibrary sharedLibrary])
+        libvlc_release(_libraryInstance.instance);
 }
 
 - (void)setDelegate:(id)value
@@ -818,7 +819,7 @@ static void HandleMediaPlayerMediaChanged(const libvlc_event_t * event, void * s
     unsigned count = libvlc_audio_equalizer_get_preset_count();
     NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:count];
     for (unsigned x = 0; x < count; x++)
-        [array addObject:[NSString stringWithUTF8String:libvlc_audio_equalizer_get_preset_name(x)]];
+        [array addObject:@(libvlc_audio_equalizer_get_preset_name(x))];
 
     return [NSArray arrayWithArray:array];
 }
@@ -1082,13 +1083,13 @@ static void HandleMediaPlayerMediaChanged(const libvlc_event_t * event, void * s
         // instance
         if (options && options.count > 0) {
             VKLog(@"creating player instance with private library as options were given");
-            _privateLibrary = [[VLCLibrary alloc] initWithOptions:options];
+            _libraryInstance = [[VLCLibrary alloc] initWithOptions:options];
         } else {
             VKLog(@"creating player instance using shared library");
-            _privateLibrary = [VLCLibrary sharedLibrary];
+            _libraryInstance = [VLCLibrary sharedLibrary];
         }
-        libvlc_retain([_privateLibrary instance]);
-        _playerInstance = libvlc_media_player_new([_privateLibrary instance]);
+        libvlc_retain([_libraryInstance instance]);
+        _playerInstance = libvlc_media_player_new([_libraryInstance instance]);
         libvlc_media_player_retain(_playerInstance);
 
         [self registerObservers];

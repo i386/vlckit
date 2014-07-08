@@ -57,7 +57,7 @@ static void * sharedInstance = nil;
     return sharedLibrary;
 }
 
-- (id)init
+- (instancetype)init
 {
     if (self = [super init]) {
         NSArray *vlcParams = [self _defaultOptions];
@@ -78,7 +78,7 @@ static void * sharedInstance = nil;
     return self;
 }
 
-- (id)initWithOptions:(NSArray*)options
+- (instancetype)initWithOptions:(NSArray*)options
 {
     if (self = [super init]) {
         NSArray *vlcParams = [self _defaultOptions];

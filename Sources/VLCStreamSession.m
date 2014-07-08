@@ -34,7 +34,7 @@
 @synthesize streamOutput;
 @synthesize isComplete;
 
-- (id)init
+- (instancetype)init
 {
     if( self = [super init] )
     {
@@ -48,12 +48,11 @@
 - (void)dealloc
 {
     [self removeObserver:self forKeyPath:@"state"];
-    [super dealloc];
 }
 
-+ (id)streamSession
++ (instancetype)streamSession
 {
-    return [[[self alloc] init] autorelease];
+    return [[self alloc] init];
 }
 
 
@@ -79,7 +78,7 @@
     if( libvlcArgs )
     {
         [super setMedia: [VLCMedia mediaWithMedia:originalMedia andLibVLCOptions:
-                                [NSDictionary dictionaryWithObject: libvlcArgs forKey: @"sout"]]];
+                                @{@"sout": libvlcArgs}]];
     }
     else
     {

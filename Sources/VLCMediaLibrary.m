@@ -30,7 +30,7 @@
 #include <vlc/libvlc.h>
 
 @implementation VLCMediaLibrary
-+ (id)sharedMediaLibrary
++ (VLCMediaLibrary*)sharedMediaLibrary
 {
     static VLCMediaLibrary * sharedMediaLibrary = nil;
     if( !sharedMediaLibrary )
@@ -40,7 +40,7 @@
     return sharedMediaLibrary;
 }
 
-- (id)init
+- (instancetype)init
 {
     if (self = [super init])
     {
@@ -55,12 +55,10 @@
 
 - (void)dealloc
 {
-    [allMedia release];
 
     libvlc_media_library_release(mlib);
     mlib = nil;     // make sure that the pointer is dead
 
-    [super dealloc];
 }
 
 - (VLCMediaList *)allMedia
@@ -68,7 +66,7 @@
     if( !allMedia )
     {
         libvlc_media_list_t * p_mlist = libvlc_media_library_media_list( mlib );
-        allMedia = [[VLCMediaList mediaListWithLibVLCMediaList:p_mlist] retain];
+        allMedia = [VLCMediaList mediaListWithLibVLCMediaList:p_mlist];
         libvlc_media_list_release(p_mlist);
     }
     return allMedia;

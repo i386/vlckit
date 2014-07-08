@@ -35,16 +35,16 @@
 /* Factories */
 + (id)layoutManager
 {
-    return [[[self alloc] init] autorelease];
+    return [[self alloc] init];
 }
 
 /* CALayoutManager Impelmentation */
 - (void)layoutSublayersOfLayer:(CALayer *)layer
 {
     /* After having done everything normally resize the vlcopengllayer */
-    if( [[layer sublayers] count] > 0 && [[[[layer sublayers] objectAtIndex:0] name] isEqualToString:@"vlcopengllayer"])
+    if( [[layer sublayers] count] > 0 && [[[layer sublayers][0] name] isEqualToString:@"vlcopengllayer"])
     {
-        CALayer * videolayer = [[layer sublayers] objectAtIndex:0];
+        CALayer * videolayer = [layer sublayers][0];
         CGRect bounds = layer.bounds;
         CGRect videoRect = bounds;
 

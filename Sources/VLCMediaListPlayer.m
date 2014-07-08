@@ -32,7 +32,7 @@
 
 @implementation VLCMediaListPlayer
 
-- (id)initWithOptions:(NSArray *)options
+- (instancetype)initWithOptions:(NSArray *)options
 {
         if (self = [super init]) {
             _mediaPlayer = [[VLCMediaPlayer alloc] initWithOptions:options];
@@ -44,7 +44,7 @@
 
 }
 
-- (id)init
+- (instancetype)init
 {
     return [self initWithOptions:nil];
 }

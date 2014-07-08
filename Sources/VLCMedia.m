@@ -61,11 +61,10 @@ NSString *const VLCMediaMetaChanged              = @"VLCMediaMetaChanged";
 @interface VLCMedia ()
 {
     void *                p_md;              //< Internal media descriptor instance
-    NSURL *               url;               //< URL (MRL) for this media resource
-    VLCMediaList *        subitems;          //< Sub list of items
+    NSURL *               __weak url;               //< URL (MRL) for this media resource
+    VLCMediaList *        __weak subitems;          //< Sub list of items
     VLCTime *             length;            //< Cached duration of the media
     NSMutableDictionary * metaDictionary;    //< Meta data storage
-    id                    delegate;          //< Delegate object
     BOOL                  isArtFetched;      //< Value used to determine of the artwork has been parsed
     BOOL                  areOthersMetaFetched; //< Value used to determine of the other meta has been parsed
     BOOL                  isArtURLFetched;   //< Value used to determine of the other meta has been preparsed
@@ -176,27 +175,27 @@ static void HandleMediaParsedChanged(const libvlc_event_t * event, void * self)
  * Implementation
  */
 @implementation VLCMedia
-+ (id)mediaWithURL:(NSURL *)anURL;
++ (instancetype)mediaWithURL:(NSURL *)anURL;
 {
     return [[VLCMedia alloc] initWithURL:anURL];
 }
 
-+ (id)mediaWithPath:(NSString *)aPath;
++ (instancetype)mediaWithPath:(NSString *)aPath;
 {
     return [[VLCMedia alloc] initWithPath:aPath];
 }
 
-+ (id)mediaAsNodeWithName:(NSString *)aName;
++ (instancetype)mediaAsNodeWithName:(NSString *)aName;
 {
     return [[VLCMedia alloc] initAsNodeWithName:aName];
 }
 
-- (id)initWithPath:(NSString *)aPath
+- (instancetype)initWithPath:(NSString *)aPath
 {
     return [self initWithURL:[NSURL fileURLWithPath:aPath isDirectory:NO]];
 }
 
-- (id)initWithURL:(NSURL *)anURL
+- (instancetype)initWithURL:(NSURL *)anURL
 {
     if (self = [super init]) {
         VLCLibrary *library = [VLCLibrary sharedLibrary];
@@ -204,7 +203,7 @@ static void HandleMediaParsedChanged(const libvlc_event_t * event, void * self)
 
         p_md = libvlc_media_new_location(library.instance, [[anURL absoluteString] UTF8String]);
 
-        delegate = nil;
+        _delegate = nil;
         metaDictionary = [[NSMutableDictionary alloc] initWithCapacity:3];
 
         // This value is set whenever the demuxer figures out what the length is.
@@ -216,13 +215,13 @@ static void HandleMediaParsedChanged(const libvlc_event_t * event, void * self)
     return self;
 }
 
-- (id)initAsNodeWithName:(NSString *)aName
+- (instancetype)initAsNodeWithName:(NSString *)aName
 {
     if (self = [super init]) {
         p_md = libvlc_media_new_as_node([VLCLibrary sharedInstance],
                                                    [aName UTF8String]);
 
-        delegate = nil;
+        _delegate = nil;
         metaDictionary = [[NSMutableDictionary alloc] initWithCapacity:3];
 
         // This value is set whenever the demuxer figures out what the length is.
@@ -236,6 +235,7 @@ static void HandleMediaParsedChanged(const libvlc_event_t * event, void * self)
 
 - (void)dealloc
 {
+    
     libvlc_event_manager_t * p_em = libvlc_media_event_manager(p_md);
     libvlc_event_detach(p_em, libvlc_MediaMetaChanged,     HandleMediaMetaChanged,     (__bridge void *)(self));
     libvlc_event_detach(p_em, libvlc_MediaDurationChanged, HandleMediaDurationChanged, (__bridge void *)(self));
@@ -246,10 +246,9 @@ static void HandleMediaParsedChanged(const libvlc_event_t * event, void * self)
 
     // Testing to see if the pointer exists is not required, if the pointer is null
     // then the release message is not sent to it.
-    delegate = nil;
+    _delegate = nil;
 
     libvlc_media_release( p_md );
-
 }
 
 - (NSString *)description
@@ -266,8 +265,6 @@ static void HandleMediaParsedChanged(const libvlc_event_t * event, void * self)
         return NSOrderedDescending;
     return p_md == [media libVLCMediaDescriptor] ? NSOrderedSame : NSOrderedAscending;
 }
-
-@synthesize delegate;
 
 - (VLCTime *)length
 {
@@ -686,7 +683,7 @@ NSString *const VLCMediaTracksInformationTextEncoding = @"encoding"; // NSString
     if (!returnValue)
         return NULL;
 
-    NSString *actualReturnValue = [NSString stringWithUTF8String:returnValue];
+    NSString *actualReturnValue = @(returnValue);
     free(returnValue);
 
     return actualReturnValue;
@@ -871,21 +868,21 @@ NSString *const VLCMediaTracksInformationTextEncoding = @"encoding"; // NSString
 #if !TARGET_OS_IPHONE
 - (void)fetchMetaInformationForArtWorkWithURL:(NSString *)anURL
 {
-    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    NSImage * art = nil;
+    @autoreleasepool {
+        NSImage * art = nil;
 
-    if (anURL) {
-        // Go ahead and load up the art work
-        NSURL * artUrl = [NSURL URLWithString:[anURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-        // Don't attempt to fetch artwork from remote. Core will do that alone
-        if ([artUrl isFileURL])
-            art  = [[[NSImage alloc] initWithContentsOfURL:artUrl] autorelease];
+        if (anURL) {
+            // Go ahead and load up the art work
+            NSURL * artUrl = [NSURL URLWithString:[anURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            // Don't attempt to fetch artwork from remote. Core will do that alone
+            if ([artUrl isFileURL])
+                art  = [[NSImage alloc] initWithContentsOfURL:artUrl];
+        }
+
+        // If anything was found, lets save it to the meta data dictionary
+        [self performSelectorOnMainThread:@selector(setArtwork:) withObject:art waitUntilDone:NO];
+
     }
-
-    // If anything was found, lets save it to the meta data dictionary
-    [self performSelectorOnMainThread:@selector(setArtwork:) withObject:art waitUntilDone:NO];
-
-    [pool release];
 }
 
 - (void)setArtwork:(NSImage *)art
@@ -895,7 +892,7 @@ NSString *const VLCMediaTracksInformationTextEncoding = @"encoding"; // NSString
         return;
     }
 
-    [metaDictionary setObject:art forKey:@"artwork"];
+    metaDictionary[@"artwork"] = art;
 }
 #endif
 
@@ -909,7 +906,7 @@ NSString *const VLCMediaTracksInformationTextEncoding = @"encoding"; // NSString
 {
     [self fetchMetaInformationFromLibVLCWithType:metaType];
 
-    if ([delegate respondsToSelector:@selector(mediaMetaDataDidChange:)])
+    if ([_delegate respondsToSelector:@selector(mediaMetaDataDidChange:)])
         [self.delegate mediaMetaDataDidChange:self];
 }
 
@@ -935,11 +932,11 @@ NSString *const VLCMediaTracksInformationTextEncoding = @"encoding"; // NSString
     [self didChangeValueForKey:@"parsed"];
 
     // FIXME: Probably don't even call this if there is no delegate.
-    if (!delegate || !isParsed)
+    if (!_delegate || !isParsed)
         return;
 
-    if ([delegate respondsToSelector:@selector(mediaDidFinishParsing:)])
-        [delegate mediaDidFinishParsing:self];
+    if ([_delegate respondsToSelector:@selector(mediaDidFinishParsing:)])
+        [_delegate mediaDidFinishParsing:self];
 }
 
 - (void)setStateAsNumber:(NSNumber *)newStateAsNumber

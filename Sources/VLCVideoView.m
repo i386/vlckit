@@ -68,7 +68,7 @@
 
 @interface VLCVideoView ()
 {
-    id delegate;
+    id __unsafe_unretained delegate;
     NSColor * backColor;
     BOOL stretchesVideo;
     id layoutManager;
@@ -85,7 +85,7 @@
 @implementation VLCVideoView
 
 /* Initializers */
-- (id)initWithFrame:(NSRect)rect
+- (instancetype)initWithFrame:(NSRect)rect
 {
     if (self = [super initWithFrame:rect])
     {
@@ -96,7 +96,7 @@
 
         [self setStretchesVideo:NO];
         [self setAutoresizesSubviews:YES];
-        layoutManager = [[VLCVideoLayoutManager layoutManager] retain];
+        layoutManager = [VLCVideoLayoutManager layoutManager];
     }
     return self;
 }
@@ -104,9 +104,6 @@
 - (void)dealloc
 {
     self.delegate = nil;
-    self.backColor = nil;
-    [layoutManager release];
-    [super dealloc];
 }
 
 /* NSView Overrides */

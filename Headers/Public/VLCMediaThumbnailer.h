@@ -36,7 +36,7 @@
 - (void)fetchThumbnail;
 
 @property (readwrite, weak) id<VLCMediaThumbnailerDelegate> delegate;
-@property (readwrite) VLCMedia *media;
+@property (weak, readwrite) VLCMedia *media;
 @property (readwrite, assign) CGImageRef thumbnail;
 @property (readwrite) void * libVLCinstance;
 

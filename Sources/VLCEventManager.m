@@ -40,10 +40,10 @@ typedef enum
  */
 @interface message_t : NSObject
 
-@property (nonatomic) id target;    //< Target object that should receive the message (retained until method is called).
+@property (unsafe_unretained, nonatomic) id target;    //< Target object that should receive the message (retained until method is called).
 @property (nonatomic) SEL sel;      //< A selector that identifies the message to be sent to the target.
 @property (nonatomic, copy) NSString * name;           //< Name to be used for NSNotification
-@property (nonatomic) id object;                  //< Object argument to pass to the target via the selector.
+@property (strong, nonatomic) id object;                  //< Object argument to pass to the target via the selector.
 @property (nonatomic) message_type_t type;            //< Type of queued message.
 
 @end

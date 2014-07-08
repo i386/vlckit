@@ -76,8 +76,6 @@ static VLCExtensionsManager *sharedManager = nil;
 
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 
-    [_extensions release];
-    [super dealloc];
 }
 
 - (NSArray *)extensions
@@ -106,7 +104,6 @@ static VLCExtensionsManager *sharedManager = nil;
     FOREACH_ARRAY(ext, _instance->extensions)
         VLCExtension *extension = [[VLCExtension alloc] initWithInstance:ext];
         [_extensions addObject:extension];
-        [extension release];
     FOREACH_END()
     vlc_mutex_unlock(&_instance->lock);
     return _extensions;
@@ -153,8 +150,7 @@ static VLCExtensionsManager *sharedManager = nil;
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
     [center removeObserver:self name:VLCMediaPlayerStateChanged object:_player];
 
-    [_player release];
-    _player = [player retain];
+    _player = player;
 
     [self mediaPlayerLikelyChangedInput];
 

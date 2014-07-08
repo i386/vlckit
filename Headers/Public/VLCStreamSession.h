@@ -34,10 +34,10 @@
     BOOL isComplete;
 }
 
-+ (id)streamSession;
++ (instancetype)streamSession;
 
-@property (retain) VLCMedia * media;
-@property (retain) VLCStreamOutput * streamOutput;
+@property (nonatomic, strong) VLCMedia * media;
+@property (strong) VLCStreamOutput * streamOutput;
 @property (readonly) BOOL isComplete;
 
 - (void)startStreaming;

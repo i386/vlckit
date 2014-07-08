@@ -27,7 +27,7 @@
 
 @interface VLCVideoView : NSView
 /* Properties */
-@property (assign) id delegate;
+@property (unsafe_unretained) id delegate;
 @property (copy) NSColor *backColor;
 @property BOOL fillScreen;
 @property (readonly) BOOL hasVideo;
